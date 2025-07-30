@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.ads - لوحة الإعلانات</title>
+
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AcOdkoED86PSrGzGnxAjBXW__gqQgV7MeA-32pqOYFGs6MbWnGmrwOucdxURuYAPw-CNtpRuf2chtnqV&currency=USD"></script>
+
+  <style>
+    /* 🔥 خلفية متحركة مع شعارات */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #111;
+      overflow-x: hidden;
+    }
+    .logo-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .logo-bg img {
+      position: absolute;
+      width: 80px;
+      opacity: 0.07;
+      animation: float 20s linear infinite;
+    }
+    @keyframes float {
+      from { transform: translateY(100vh) rotate(0deg); }
+      to { transform: translateY(-200px) rotate(360deg); }
+    }
+
+    /* 🔵 الهيدر */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(20,20,20,0.8);
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      position: sticky;
+      top: 0;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    /* 🎯 زر نشر إعلان */
+    #openFormBtn {
+      padding: 10px 20px;
+      background: #ff4a57;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    #openFormBtn:hover { background: #ff1a33; }
+
+    /* ⚙️ زر الإعدادات */
+    #settingsBtn {
+      font-size: 24px;
+      background: none;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* 📜 قائمة اللغات */
+    #languageMenu {
+      display: none;
+      position: absolute;
+      right: 20px;
+      top: 70px;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #languageMenu button {
+      display: block;
+      margin: 5px 0;
+      width: 100%;
+      padding: 8px;
+      border: none;
+      background: #f5f5f5;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #languageMenu button:hover { background: #ddd; }
+
+    /* 🟦 شبكة الإعلانات */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+    .ad-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      height: 200px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #666;
+      transition: transform 0.3s ease;
+    }
+    .ad-card:hover { transform: scale(1.03); }
+
+    /* 📥 نافذة إدخال إعلان */
+    #formContainer {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px;
+      width: 320px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      border-radius: 12px;
+      z-index: 1000;
+      text-align: center;
+    }
+    #formContainer input {
+      width: 90%;
+      margin: 8px auto;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #publishAdBtn {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      background: #ff4a57;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .closeBtn {
+      position: absolute;
+      right: 15px;
+      top: 10px;
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 🔥 خلفية شعارات -->
+<div class="logo-bg">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" style="left:5%; animation-delay:0s;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" style="left:20%; animation-delay:5s;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Tesla_logo.png" style="left:40%; animation-delay:10s;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" style="left:60%; animation-delay:15s;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" style="left:80%; animation-delay:20s;">
+</div>
+
+<header>
+  <h1 id="siteTitle">🎯 M.ads</h1>
+  <button id="openFormBtn">➕ نشر إعلان</button>
+  <button id="settingsBtn">⚙️</button>
+  <div id="languageMenu">
+    <button data-lang="ar">🇸🇦 العربية</button>
+    <button data-lang="en">🇬🇧 English</button>
+    <button data-lang="he">🇮🇱 עברית</button>
+    <button data-lang="ru">🇷🇺 Русский</button>
+    <button data-lang="fr">🇫🇷 Français</button>
+    <button data-lang="zh">🇨🇳 中文</button>
+    <button data-lang="hr">🇭🇷 Hrvatski</button>
+    <button data-lang="ja">🇯🇵 日本語</button>
+    <button data-lang="tr">🇹🇷 Türkçe</button>
+    <button data-lang="de">🇩🇪 Deutsch</button>
+  </div>
+</header>
+
+<main>
+  <div id="grid"></div>
+</main>
+
+<!-- نافذة إدخال إعلان -->
+<div id="formContainer">
+  <button class="closeBtn" title="إغلاق">×</button>
+  <h2 id="addAdText">📝 إضافة إعلان جديد</h2>
+  <input type="text" id="adName" placeholder="اسم الإعلان" required>
+  <input type="text" id="adLink" placeholder="رابط الإعلان (http أو https)" required>
+  <input type="text" id="adDescription" placeholder="وصف الإعلان (اختياري)">
+  <input type="file" id="adImage" accept="image/*" required>
+  <div id="paypal-button-container"></div>
+  <button id="publishAdBtn">✅ نشر الإعلان بعد الدفع</button>
+</div>
+
+<script>
+/* ✅ تحميل 1000 خانة فارغة */
+const grid = document.getElementById('grid');
+for (let i = 1; i <= 1000; i++) {
+  const card = document.createElement('div');
+  card.className = 'ad-card';
+  card.textContent = 'إعلان فارغ';
+  grid.appendChild(card);
+}
+
+/* ✅ فتح نافذة الإعلان */
+document.getElementById('openFormBtn').onclick = () => {
+  document.getElementById('formContainer').style.display = 'block';
+};
+
+/* ✅ إغلاق النافذة */
+document.querySelector('.closeBtn').onclick = () => {
+  document.getElementById('formContainer').style.display = 'none';
+};
+
+/* ✅ زر الإعدادات */
+const settingsBtn = document.getElementById('settingsBtn');
+const languageMenu = document.getElementById('languageMenu');
+settingsBtn.onclick = () => {
+  languageMenu.style.display = languageMenu.style.display === 'block' ? 'none' : 'block';
+};
+
+/* ✅ تغيير اللغة */
+const translations = {
+  ar: { title: '🎯 M.ads', addAd: '📝 إضافة إعلان جديد', publish: '✅ نشر الإعلان بعد الدفع', post: '➕ نشر إعلان' },
+  en: { title: '🎯 M.ads', addAd: '📝 Add New Ad', publish: '✅ Publish after Payment', post: '➕ Post Ad' },
+  he: { title: '🎯 M.ads', addAd: '📝 הוסף מודעה חדשה', publish: '✅ פרסם לאחר תשלום', post: '➕ פרסם מודעה' },
+  ru: { title: '🎯 M.ads', addAd: '📝 Добавить новое объявление', publish: '✅ Опубликовать после оплаты', post: '➕ Опубликовать' },
+  fr: { title: '🎯 M.ads', addAd: '📝 Ajouter une annonce', publish: '✅ Publier après paiement', post: '➕ Publier' },
+  zh: { title: '🎯 M.ads', addAd: '📝 添加新广告', publish: '✅ 支付后发布', post: '➕ 发布广告' },
+  hr: { title: '🎯 M.ads', addAd: '📝 Dodaj novi oglas', publish: '✅ Objavi nakon plaćanja', post: '➕ Objavi oglas' },
+  ja: { title: '🎯 M.ads', addAd: '📝 新しい広告を追加', publish: '✅ 支払い後に公開', post: '➕ 広告を投稿' },
+  tr: { title: '🎯 M.ads', addAd: '📝 Yeni İlan Ekle', publish: '✅ Ödeme sonrası yayına al', post: '➕ İlan Yayınla' },
+  de: { title: '🎯 M.ads', addAd: '📝 Neue Anzeige hinzufügen', publish: '✅ Nach Zahlung veröffentlichen', post: '➕ Anzeige posten' },
+};
+
+document.querySelectorAll('#languageMenu button').forEach(btn => {
+  btn.onclick = () => {
+    const lang = btn.dataset.lang;
+    document.getElementById('siteTitle').textContent = translations[lang].title;
+    document.getElementById('addAdText').textContent = translations[lang].addAd;
+    document.getElementById('publishAdBtn').textContent = translations[lang].publish;
+    document.getElementById('openFormBtn').textContent = translations[lang].post;
+    languageMenu.style.display = 'none';
+  };
+});
+
+/* ✅ PayPal */
+let paymentDone = false;
+paypal.Buttons({
+  createOrder: (data, actions) => {
+    return actions.order.create({
+      purchase_units: [{ amount: { value: '1.00' } }]
+    });
+  },
+  onApprove: (data, actions) => {
+    return actions.order.capture().then(details => {
+      alert('✅ تم الدفع بنجاح بواسطة ' + details.payer.name.given_name);
+      paymentDone = true;
+    });
+  }
+}).render('#paypal-button-container');
+
+/* ✅ نشر الإعلان */
+document.getElementById('publishAdBtn').onclick = () => {
+  if (!paymentDone) { alert('❌ يجب الدفع أولاً!'); return; }
+
+  const name = document.getElementById('adName').value;
+  const link = document.getElementById('adLink').value;
+  const desc = document.getElementById('adDescription').value;
+  const img = document.getElementById('adImage').files[0];
+
+  if (!name || !link || !img) { alert('⚠️ املأ الحقول المطلوبة'); return; }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const card = document.createElement('div');
+    card.className = 'ad-card';
+    card.innerHTML = `<a href=\"${link}\" target=\"_blank\"><img src=\"${e.target.result}\" style=\"width:100%;border-radius:10px;\"><h3>${name}</h3><p>${desc}</p></a>`;
+    grid.appendChild(card);
+  };
+  reader.readAsDataURL(img);
+
+  document.getElementById('formContainer').style.display = 'none';
+  paymentDone = false;
+};
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.ads - منصة الإعلانات</title>
+
+  <!-- ✅ سكربت PayPal -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
+
+  <!-- ✅ CSS (تصميم عصري + نوافذ منبثقة) -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(120deg, #f6f9ff, #eef2f3);
+      color: #222;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+      background: #1e1e2f;
+      color: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+
+    /* ✅ أزرار الهيدر */
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .header-buttons button {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+    }
+    .header-buttons button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+    }
+
+    /* ✅ مكان الإعلانات */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      padding: 20px;
+    }
+    .ad-box {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      background: white;
+      border-radius: 10px;
+      transition: transform 0.2s ease;
+    }
+    .ad-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    }
+
+    /* ✅ النوافذ المنبثقة */
+    .popup {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+    }
+    .popup-content {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      text-align: right;
+      position: relative;
+      animation: fadeIn 0.4s ease;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: scale(0.9);}
+      to {opacity: 1; transform: scale(1);}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ الهيدر مع الأزرار -->
+  <header>
+    <h1>M.ads</h1>
+    <div class="header-buttons">
+      <button id="aboutBtn">ℹ️ من نحن</button>
+      <button id="privacyBtn">📜 سياسة الخصوصية</button>
+      <button id="contactBtn">📞 اتصل بنا</button>
+    </div>
+  </header>
+
+  <!-- ✅ شبكة الإعلانات -->
+  <main>
+    <div id="grid">
+      <!-- سيتم ملء الإعلانات هنا -->
+    </div>
+  </main>
+
+  <!-- ✅ نافذة من نحن -->
+  <div class="popup" id="aboutPopup">
+    <div class="popup-content">
+      <span class="close-btn" onclick="closePopup('aboutPopup')">×</span>
+      <h2>من نحن</h2>
+      <p>
+        مرحبًا بكم في <b>M.ads</b> – منصة إعلانات مبتكرة تهدف لتمكين الأفراد والشركات من نشر إعلاناتهم بسهولة.
+        أسس هذا الموقع <b>ياسين حساني</b> بدافع الشغف بالتطوير وبناء مشاريع مفيدة.
+        الفكرة بدأت كهواية لتعلم البرمجة، ومع الوقت أصبحت منصة حقيقية تساعد الناس على الإعلان بطرق حديثة.
+        هدفنا هو إنشاء بيئة سهلة وعصرية للإعلانات تناسب كل المستخدمين.
+      </p>
+    </div>
+  </div>
+
+  <!-- ✅ نافذة سياسة الخصوصية -->
+  <div class="popup" id="privacyPopup">
+    <div class="popup-content">
+      <span class="close-btn" onclick="closePopup('privacyPopup')">×</span>
+      <h2>سياسة الخصوصية</h2>
+      <p>
+        نحن في M.ads نحترم خصوصية مستخدمينا ونلتزم بحماية بياناتهم. 
+        عند استخدامك الموقع، قد نجمع بعض المعلومات (مثل البريد الإلكتروني ومعلومات الدفع).
+        🔒 <b>ملاحظة مهمة:</b> في حالة اختيارك حفظ معلومات الدفع، يتم تخزينها بأمان كامل وبطرق مشفرة
+        ولا تتم مشاركتها مع أي طرف ثالث. باستخدامك M.ads، فإنك توافق على سياسة الخصوصية هذه.
+      </p>
+    </div>
+  </div>
+
+  <!-- ✅ نافذة اتصل بنا -->
+  <div class="popup" id="contactPopup">
+    <div class="popup-content">
+      <span class="close-btn" onclick="closePopup('contactPopup')">×</span>
+      <h2>اتصل بنا</h2>
+      <p>📧 البريد الإلكتروني: <a href="mailto:hsanyyasyn97@gmail.com">hsanyyasyn97@gmail.com</a></p>
+      <p>📷 إنستغرام: <a href="https://www.instagram.com/hasani_yasin312/?__pwa=1" target="_blank">اضغط هنا</a></p>
+      <p>📘 فيسبوك 1: <a href="https://www.facebook.com/?ref=homescreenpwa" target="_blank">اضغط هنا</a></p>
+      <p>📘 فيسبوك 2: <a href="https://www.facebook.com/lou.lou.769185" target="_blank">اضغط هنا</a></p>
+    </div>
+  </div>
+
+  <!-- ✅ سكربت JavaScript -->
+  <script>
+    // ✅ فتح النوافذ
+    document.getElementById("aboutBtn").onclick = function() {
+      document.getElementById("aboutPopup").style.display = "flex";
+    };
+    document.getElementById("privacyBtn").onclick = function() {
+      document.getElementById("privacyPopup").style.display = "flex";
+    };
+    document.getElementById("contactBtn").onclick = function() {
+      document.getElementById("contactPopup").style.display = "flex";
+    };
+
+    // ✅ إغلاق النوافذ
+    function closePopup(id) {
+      document.getElementById(id).style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
